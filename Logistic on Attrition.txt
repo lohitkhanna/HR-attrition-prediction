@@ -1,0 +1,135 @@
+## Applying Logistic Regression on the dataset.
+
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+import matplotlib.pyplot as plt 
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.cross_validation import train_test_split
+import seaborn as sns
+
+data=pd.read_csv("C:\\Users\\Kumar Madhav\\Desktop\\Python_Project\\HR-Employee-Attrition.csv")
+data.shape
+data.head
+data.dtypes
+a=pd.DataFrame(data.dtypes)
+a
+ 
+data.columns
+len(data.columns)
+
+## Categorical variable exploration
+
+data['Attrition'].unique()     ## Yes,No
+data['BusinessTravel'].unique()## Travel_Rarely', 'Travel_Frequently', 'Non-Travel
+data['DailyRate'].unique()
+data['Department'].unique()    ##'Sales', 'Research & Development', 'Human Resources'
+data['EducationField'].unique()## 'Life Sciences', 'Other', 'Medical', 'Marketing',
+                               ##'Technical Degree', 'Human Resources'
+data['Gender'].unique()        ## 'Female', 'Male'
+data['JobRole'].unique()       ## Sales Executive', 'Research Scientist', 'Laboratory Technician',
+                               ##'Manufacturing Director', 'Healthcare Representative', 'Manager',
+                               ##'Sales Representative', 'Research Director', 'Human Resources'
+data['MaritalStatus'].unique() ##'Single', 'Married', 'Divorced'
+data['Over18'].unique()        ## Everybody is same so , ignore
+data['OverTime'].unique()      ## yes,No
+
+
+## Dummy variables creation
+Attrition = pd.get_dummies(data,columns=['Attrition'])
+
+BusinessTravel = pd.get_dummies(data,columns=['BusinessTravel'])
+BusinessTravel=BusinessTravel[['BusinessTravel_Non-Travel','BusinessTravel_Travel_Frequently','BusinessTravel_Travel_Rarely']]
+
+
+DailyRate = pd.get_dummies(data,columns=['DailyRate'])
+DailyRate=DailyRate[['DailyRate_1480','DailyRate_1482','DailyRate_1485' ,'DailyRate_1488',
+'DailyRate_1490','DailyRate_1492','DailyRate_1495','DailyRate_1496','DailyRate_1498',
+'DailyRate_1499']]  
+
+Department = pd.get_dummies(data,columns=['Department'])
+Department=Department[['Department_Human Resources','Department_Research & Development','Department_Sales']]
+
+EducationField = pd.get_dummies(data,columns=['EducationField'])
+EducationField=EducationField[['EducationField_Human Resources',
+                               'EducationField_Life Sciences',
+'EducationField_Marketing','EducationField_Medical','EducationField_Other']] 
+
+Gender = pd.get_dummies(data,columns=['Gender'])
+Gender=Gender[['Gender_Female','Gender_Male']]
+
+JobRole = pd.get_dummies(data,columns=['JobRole'])
+JobRole=JobRole[['JobRole_Healthcare Representative','JobRole_Human Resources',
+         'JobRole_Laboratory Technician','JobRole_Manager',
+         'JobRole_Manufacturing Director',
+         'JobRole_Research Director','JobRole_Research Scientist',
+         'JobRole_Sales Executive',
+         'JobRole_Sales Representative']]
+
+MaritalStatus = pd.get_dummies(data,columns=['MaritalStatus'])
+MaritalStatus=MaritalStatus[['MaritalStatus_Divorced','MaritalStatus_Married',
+                             'MaritalStatus_Single']]
+
+OverTime = pd.get_dummies(data,columns=['OverTime'])
+OverTime=OverTime[['OverTime_No','OverTime_Yes']]
+
+## Removing the Categorical data from the dataset
+data1 = data.drop(['Over18','BusinessTravel','DailyRate','Department',
+                   'EducationField','Gender','JobRole','MaritalStatus',
+                   'OverTime'],axis=1)
+data1.head(5)
+## Placing the data frame side by side
+final_data = pd.concat([data1,BusinessTravel,DailyRate,Department,
+                        EducationField,Gender,JobRole,MaritalStatus,
+                        OverTime], axis=1)
+final_data.head
+final_data=pd.DataFrame(final_data)
+final_data.head(5)
+len(final_data.columns)
+
+## Checking the independence of Independent variables 
+sns.heatmap(final_data.corr())
+plt.show()
+
+
+
+## Putting Attrition values as 1 and 0 .
+final_data['Attrition1'] = np.where(final_data['Attrition']=='Yes', 1,0)
+final_data.columns
+final_data=final_data.drop(['Attrition'],axis=1)
+
+
+## Splitting the data
+X = final_data.iloc[:,range(0,62)]
+X.columns
+y = final_data.iloc[:,-1]
+y.head(5)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state =0)
+
+X_train.shape
+
+
+## Applying Logistic
+
+classifier = LogisticRegression(random_state=0)
+model=classifier.fit(X_train, y_train)
+
+y_pred = classifier.predict(X_test)
+print(y_pred)
+from sklearn.metrics import confusion_matrix
+confusion_matrix = confusion_matrix(y_test, y_pred)
+print(confusion_matrix)
+
+print('Accuracy of logistic regression classifier on test set: {:.2f}'
+      .format(classifier.score(X_test, y_test)))
+
+## Accuracy of logistic regression classifier on test set: 0.89
+
+from sklearn.metrics import classification_report
+print(classification_report(y_test, y_pred))
+
+## Calculation of R square
+from sklearn.metrics import r2_score
+r2_score(y_test, y_pred)  
+#0.20177975528364844
